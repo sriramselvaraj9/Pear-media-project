@@ -20,8 +20,19 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
-// Serve static files
-app.use(express.static(path.join(__dirname, '..')));
+// Serve static files - compatible with both local and Vercel deployment
+const staticDir = path.resolve(__dirname, '..');
+app.use(express.static(staticDir));
+
+// Root route - serve index.html
+app.get('/', (req, res) => {
+    const indexPath = path.join(staticDir, 'index.html');
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            res.status(404).json({ error: 'index.html not found' });
+        }
+    });
+});
 
 // API Keys
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
@@ -331,9 +342,14 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
 });
 
-// 404 handler
+// SPA Fallback - serve index.html for any unmatched routes
 app.use((req, res) => {
-    res.status(404).json({ error: 'Endpoint not found' });
+    const indexPath = path.join(staticDir, 'index.html');
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            res.status(404).json({ error: 'Not found' });
+        }
+    });
 });
 
 // Start server
