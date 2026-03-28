@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pear Media - AI Text & Image Generation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .workflows {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .workflows {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .workflow {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 30px;
+            background: #f9f9f9;
+            transition: all 0.3s ease;
+        }
+
+        .workflow:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .workflow h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .workflow h2::before {
+            content: '✨';
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        input[type="text"]:focus,
+        input[type="file"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item strong {
+            color: #667eea;
+        }
+
+        .enhanced-prompt {
+            background: #e8f0fe;
+            padding: 15px;
+            border-left: 4px solid #1f73db;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .approval-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .approval-buttons button {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+
+        .approval-buttons .approve {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .approval-buttons .reject {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .generated-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .generated-images img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .generated-images img:hover {
+            transform: scale(1.05);
+        }
+
+        .error {
+            background: #ffe8e8;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #c33;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2e7d32;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .success.active {
+            display: block;
+        }
+
+        .info-box {
+            background: #fff3e0;
+            border: 2px solid #ffb74d;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #e65100;
+            font-size: 0.9em;
+        }
+
+        .api-status {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        footer {
+            background: #f5f5f5;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 Pear Media</h1>
+            <p>AI-Powered Text Enhancement & Image Generation Platform</p>
+        </header>
+
+        <div class="workflows">
+            <!-- Text Enhancement Workflow -->
+            <div class="workflow">
+                <h2>Text Enhancement</h2>
+                <div class="info-box">
+                    Enhanced prompts using Google Cloud NLP for better image generation
+                </div>
+
+                <div class="form-group">
+                    <label for="textInput">Enter Your Text Prompt:</label>
+                    <textarea id="textInput" placeholder="e.g., A beautiful sunset over the mountains..."></textarea>
+                </div>
+
+                <button onclick="enhanceText()">🔍 Analyze & Enhance</button>
+
+                <div id="textLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing your text...</p>
+                </div>
+
+                <div id="textResults" class="results">
+                    <h3>Enhancement Results</h3>
+                    <div id="textAnalysis"></div>
+                    <div id="enhancedPromptBox"></div>
+                    <div id="textError" class="error"></div>
+                    <div id="textSuccess" class="success"></div>
+                </div>
+            </div>
+
+            <!-- Image Generation/Analysis Workflow -->
+            <div class="workflow">
+                <h2>Image Generation</h2>
+                <div class="info-box">
+                    Upload or generate images with AI-powered variations
+                </div>
+
+                <div class="form-group">
+                    <label for="imageInput">Upload Image or Use Enhanced Prompt:</label>
+                    <input type="file" id="imageInput" accept="image/*">
+                </div>
+
+                <div class="form-group">
+                    <label for="imagePrompt">Or enter an image prompt:</label>
+                    <textarea id="imagePrompt" placeholder="e.g., Cyberpunk city at night..."></textarea>
+                </div>
+
+                <button onclick="generateImage()">🖼️ Generate/Analyze Images</button>
+
+                <div id="imageLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Processing images...</p>
+                </div>
+
+                <div id="imageResults" class="results">
+                    <h3>Generated Images & Variations</h3>
+                    <div id="imageAnalysis"></div>
+                    <div id="generatedImages" class="generated-images"></div>
+                    <div id="imageError" class="error"></div>
+                    <div id="imageSuccess" class="success"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2024 Pear Media | Powered by Google Cloud NLP & HuggingFace APIs</p>
+        </footer>
+    </div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : '';
+
+        // Text Enhancement Workflow
+        async function enhanceText() {
+            const textInput = document.getElementById('textInput').value.trim();
+            
+            if (!textInput) {
+                showError('textError', 'Please enter some text to enhance');
+                return;
+            }
+
+            showLoading('textLoading', true);
+            clearResults('textResults');
+            clearError('textError');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/enhance-text`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textInput })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to enhance text');
+                }
+
+                displayTextResults(data);
+                showResults('textResults');
+            } catch (error) {
+                console.error('Error:', error);
+                showError('textError', `Error: ${error.message}`);
+            } finally {
+                showLoading('textLoading', false);
+            }
+        }
+
+        function displayTextResults(data) {
+            const analysisDiv = document.getElementById('textAnalysis');
+            const enhancedDiv = document.getElementById('enhancedPromptBox');
+            const successDiv = document.getElementById('textSuccess');
+
+            analysisDiv.innerHTML = `
+                <div class="result-item">
+                    <strong>Original Text:</strong><br>
+                    ${data.original}
+                </div>
+                <div class="result-item">
+                    <strong>Detected Entities:</strong><br>
+                    ${data.entities && data.entities.length > 0 
+                        ? data.entities.map(e => `<span style="background: #e0e7ff; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block;">${e}</span>`).join('')
+                        : 'No entities detected'}
+                </div>
+                <div class="result-item">
+                    <strong>Sentiment:</strong><br>
+                    ${data.sentiment || 'Neutral'}
+                </div>
+            `;
+
+            enhancedDiv.innerHTML = `
+                <div class="enhanced-prompt">
+                    <strong>Enhanced Prompt (Ready for Image Generation):</strong><br>
+                    <br>
+                    ${data.enhanced}
+                    <div class="approval-buttons">
+                        <button class="approve" onclick="approveAndGenerate('${escapeHtml(data.enhanced)}')">✓ Approve & Generate</button>
+                        <button class="reject" onclick="clearResults('textResults')">✗ Try Again</button>
+                    </div>
+                </div>
+            `;
+
+            showSuccess('textSuccess', 'Text analysis complete! Ready for image generation.');
+        }
+
+        async function approveAndGenerate(enhancedPrompt) {
+            const imagePromptInput = document.getElementById('imagePrompt');
+            imagePromptInput.value = enhancedPrompt;
+            
+            // Scroll to image section
+            document.querySelector('.workflows').children[1].scrollIntoView({ behavior: 'smooth' });
+            
+            showSuccess('imageSuccess', 'Enhanced prompt loaded. Click "Generate/Analyze Images" to proceed.');
+        }
+
+        // Image Generation/Analysis Workflow
+        async function generateImage() {
+            const imageInput = document.getElementById('imageInput');
+            const imagePrompt = document.getElementById('imagePrompt').value.trim();
+            
+            if (!imageInput.files.length && !imagePrompt) {
+                showError('imageError', 'Please upload an image or enter a prompt');
+                return;
+            }
+
+            showLoading('imageLoading', true);
+            clearResults('imageResults');
+            clearError('imageError');
+
+            try {
+                const formData = new FormData();
+                
+                if (imageInput.files.length > 0) {
+                    formData.append('image', imageInput.files[0]);
+                }
+                
+                if (imagePrompt) {
+                    formData.append('prompt', imagePrompt);
+                }
+
+                const response = await fetch(`${API_BASE}/api/generate-image`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate image');
+                }
+
+                displayImageResults(data);
+                showResults('imageResults');
+            } catch (error) {
+                console.error('Error:', error);
+                showError('imageError', `Error: ${error.message}`);
+            } finally {
+                showLoading('imageLoading', false);
+            }
+        }
+
+        function displayImageResults(data) {
+            const analysisDiv = document.getElementById('imageAnalysis');
+            const imagesDiv = document.getElementById('generatedImages');
+            const successDiv = document.getElementById('imageSuccess');
+
+            if (data.analysis) {
+                analysisDiv.innerHTML = `
+                    <div class="result-item">
+                        <strong>Image Analysis:</strong><br>
+                        ${data.analysis.description || 'Analysis complete'}
+                    </div>
+                    <div class="result-item">
+                        <strong>Detected Objects:</strong><br>
+                        ${data.analysis.objects && data.analysis.objects.length > 0
+                            ? data.analysis.objects.map(o => `<span style="background: #e0e7ff; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block;">${o}</span>`).join('')
+                            : 'No objects detected'}
+                    </div>
+                `;
+            }
+
+            imagesDiv.innerHTML = '';
+            if (data.generated_images && data.generated_images.length > 0) {
+                data.generated_images.forEach(imgUrl => {
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.alt = 'Generated image';
+                    img.onclick = () => window.open(imgUrl, '_blank');
+                    imagesDiv.appendChild(img);
+                });
+            }
+
+            showSuccess('imageSuccess', `Generated ${data.generated_images?.length || 0} image variations successfully!`);
+        }
+
+        // Utility Functions
+        function showLoading(elementId, show) {
+            document.getElementById(elementId).classList.toggle('active', show);
+        }
+
+        function showResults(elementId) {
+            document.getElementById(elementId).classList.add('active');
+        }
+
+        function clearResults(elementId) {
+            document.getElementById(elementId).classList.remove('active');
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.add('active');
+        }
+
+        function showSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.add('active');
+        }
+
+        function clearError(elementId) {
+            document.getElementById(elementId).classList.remove('active');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
