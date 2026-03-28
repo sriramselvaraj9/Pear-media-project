@@ -16,10 +16,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "GOOGLE_API_KEY": "@google_api_key",
-    "HUGGINGFACE_API_KEY": "@huggingface_api_key",
-    "NODE_ENV": "production"
-  }
+  ]
 }
